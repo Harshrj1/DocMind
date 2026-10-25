@@ -56,13 +56,18 @@ public class SecurityConfig {
                                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exception ->
-                        exception.authenticationEntryPoint((request, response, authException) ->
-                        {
-                            System.out.println("Unauthorized");
-                            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
-                        }))
-        ;
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"success\":false,\"message\":\"Unauthorized: Authentication token is missing or expired\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"success\":false,\"message\":\"Forbidden: Access denied\"}");
+                        })
+                );
 
         return httpSecurity.build();
     }

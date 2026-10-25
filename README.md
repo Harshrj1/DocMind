@@ -92,7 +92,7 @@ DB_USERNAME=postgres
 DB_PASSWORD=your_postgres_password
 GEMINI_API_KEY=your_gemini_api_key_here
 JWT_SECRET=your_minimum_256_bit_secure_random_jwt_secret_key_here
-APP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+APP_CORS_ALLOWED_ORIGINS=http://localhost:*,http://127.0.0.1:*,http://localhost:5173,http://localhost:5174,http://localhost:3000
 ```
 
 ### 3. Run the Application
