@@ -3,6 +3,7 @@ package com.substring.docmind.config;
 import com.substring.docmind.entity.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,8 +41,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth ->
                                 auth
+                                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                                         .requestMatchers(
                                                 "/",
+                                                "/error",
                                                 "/health",
                                                 "/api/v1/health",
                                                 "/api/v1/auth/**",
@@ -49,7 +52,7 @@ public class SecurityConfig {
                                                 "/swagger-ui/**",
                                                 "/swagger-ui.html").permitAll()
                                         .requestMatchers("/api/v1/admin/**").hasRole(Role.ADMIN.toString())
-                                        .requestMatchers("/api/v1/**").hasRole(Role.USER.toString())
+                                        .requestMatchers("/api/v1/**").hasAnyRole(Role.USER.toString(), Role.ADMIN.toString())
                                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)

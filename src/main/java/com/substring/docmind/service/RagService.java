@@ -46,6 +46,7 @@ public class RagService {
 
 
         String conversationId = request.getConversationId() != null ? request.getConversationId() : UUID.randomUUID().toString();
+        request.setConversationId(conversationId);
 
         ensureConversationExists(conversationId, user, request.getQuestion());
 
@@ -74,7 +75,7 @@ public class RagService {
                 .prompt()
                 .system(s -> s.param("doc_context", contextText))
                 .user(request.getQuestion())
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, request.getConversationId()))
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call().content();
         long responseTime = System.currentTimeMillis() - startTime;
         log.info("Completed Q&A in {} ms with {} citations", responseTime, citationDtos.size());
@@ -119,14 +120,16 @@ public class RagService {
         String contextText = buildContextString(relevantDocuments);
 //        String userPrompt = buildPrompt(requestDto.getQuestion(), contextText);
         return chatClient.prompt()
-                .system(s-> s.param("doc_context",contextText))
+                .system(s -> s.param("doc_context", contextText))
                 .user(requestDto.getQuestion())
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, requestDto.getConversationId()))
                 .stream()
                 .content()
+                .onErrorResume(e -> {
+                    log.error("Error during streaming generation: {}", e.getMessage(), e);
+                    return Flux.just("\n\n⚠️ Error generating AI response: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
+                })
                 .concatWith(Flux.just("[DONE]"));
-
-
     }
 
 
